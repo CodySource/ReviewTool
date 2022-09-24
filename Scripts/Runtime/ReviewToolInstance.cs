@@ -108,13 +108,13 @@ namespace CodySource
                         SQL_Repsponse response = JsonUtility.FromJson<SQL_Repsponse>(www.downloadHandler.text);
                         if (response.success)
                         {
-                            Debug.Log($"Success => {response.success}\t\tTimestamp => {response.submission_success}");
-                            onExportFailed?.Invoke(EXPORT_STATUS.SQL_Error(response.error));
+                            Debug.Log($"Review Tool Success => {response.success}\t\tTimestamp => {response.submission_success}");
+                            onExportComplete?.Invoke(EXPORT_STATUS.SQL_Success(response.submission_success));
                         }
                         else
                         {
-                            Debug.Log($"Success => {response.success}\t\tError => {response.error}");
-                            onExportComplete?.Invoke(EXPORT_STATUS.SQL_Succss(response.submission_success));
+                            Debug.Log($"Review Tool Success => {response.success}\t\tError => {response.error}");
+                            onExportFailed?.Invoke(EXPORT_STATUS.SQL_Error(response.error));
                         }
                     }
                 }
@@ -131,7 +131,7 @@ namespace CodySource
                 public string message;
                 public static EXPORT_STATUS SQL_Error(string pMessage) =>
                     new EXPORT_STATUS() { success = false, message = pMessage };
-                public static EXPORT_STATUS SQL_Succss(string pMessage) =>
+                public static EXPORT_STATUS SQL_Success(string pMessage) =>
                     new EXPORT_STATUS() { success = true, message = pMessage };
             }
 

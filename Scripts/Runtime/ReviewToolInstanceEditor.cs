@@ -109,8 +109,8 @@ namespace CodySource
                             {
                                 markers.Remove(_remove);
                                 _isLoading = true;
-                                ReviewToolSetup._WriteToolInstanceCS(ReviewToolSetup._SanitizeName(_instance.gameObject.name), markers);
                                 ReviewToolSetup._WriteExportScript(_instance);
+                                ReviewToolSetup._WriteToolInstanceCS(ReviewToolSetup._SanitizeName(_instance.gameObject.name), markers);
                             }
                         }
                         else GUILayout.Label("Loading...");

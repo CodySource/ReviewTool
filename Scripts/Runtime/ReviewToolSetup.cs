@@ -87,14 +87,17 @@ namespace CodySource
                 string _output = "<?php\n" +
                     "header('Access-Control-Allow-Origin: *');\n" +
                     $"const projectKey = '{pInstance.SQL_KEY}';\n" +
-                    $"const tableName = 'Review_{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_")}';\n" +
+                    $"const tableName = '{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_")}_Review';\n" +
                     $"const db_HOST = '{pInstance.SQL_HOST}';\n" +
                     $"const db_NAME = '{pInstance.SQL_DB}';\n" +
                     $"const db_USER = '{pInstance.SQL_USER}';\n" +
                     $"const db_PASS = '{pInstance.SQL_PASS}';\n" +
                     "if (!isset($_POST['key'])) Error('Missing or invalid project key!');\n" +
                     "if (!isset($_POST['payload'])) Error('Missing data!');\n" +
-                    "try { $obj = json_decode($_POST['payload']); $submission = json_encode($obj); }\n" +
+                    "try {\n" +
+                    "\t$obj = json_decode(preg_replace('/[^\\w.! {}:,\\[\\]\"]/ ','',$_POST['payload']));\n" +
+                    "\tif ($obj == null) throw new Exception('Invalid json payload!);\n" +
+                    "\t$submission = json_encode($obj); }\n" +
                     "catch (Exception $e) {Error('Invalid json payload!');}\n" +
                     "if (ConnectToDB()) {\n" +
                     "\tif (VerifyTables()) {\n" +
