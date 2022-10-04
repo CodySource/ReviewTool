@@ -25,10 +25,7 @@ namespace CodySource
                     {
                         ReviewToolSetup _setup = (ReviewToolSetup)target;
                         ReviewToolSetup._WriteToolInstanceCS(ReviewToolSetup._SanitizeName(_setup.gameObject.name),
-                            new List<(string id, int type)>() {
-                                new() { id = "TimeStamp", type = 2 },
-                                new() { id = "PlayDuration", type = 1 },
-                                new() { id = "Comment", type = 2 }});
+                            new List<(string id, string type)>() {});
                         _isSettingUp = true;
                     }
                 }
@@ -41,7 +38,7 @@ namespace CodySource
                         string _name = ReviewToolSetup._SanitizeName(_setup.gameObject.name);
                         System.Type _type = System.Type.GetType($"CodySource.ReviewTool.{_name}" + ",Assembly-CSharp");
                         ReviewToolInstance _instance = (ReviewToolInstance)_setup.gameObject.AddComponent(_type);
-                        ReviewToolSetup._WriteExportScript(_instance);
+                        ReviewToolSetup._WriteExportScript(_instance, new List<(string id, string type)>());
                         DestroyImmediate(_setup);
                     }
                     else GUILayout.Label("Setup is being performed...");

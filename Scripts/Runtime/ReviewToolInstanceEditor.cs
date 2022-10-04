@@ -20,7 +20,7 @@ namespace CodySource
             string _newMarkerName = "";
             int _newMarkerType = 0;
             bool _isLoading = false;
-            List<(string id, int type)> markers = new List<(string id, int type)> { };
+            List<(string id, string type)> markers = new List<(string id, string type)> { };
             Dictionary<string, SerializedProperty> props = new Dictionary<string, SerializedProperty>();
             bool exportExpanded = false;
             bool markersExpanded = true;
@@ -47,8 +47,8 @@ namespace CodySource
                                 EditorGUILayout.PropertyField(prop.Value);
                             }
                         }
+                        GUILayout.Space(3f);
                     }
-                    GUILayout.Space(3f);
                 }
                 else
                 {
@@ -76,14 +76,18 @@ namespace CodySource
                         EditorGUILayout.EndHorizontal();
                         GUI.backgroundColor = Color.green;
                         //  TODO:   Add protections for marker name text box
-                        if (GUILayout.Button("Add Marker"))
+                        if (GUILayout.Button((_newMarkerName != "")? "Add Marker" : "Save"))
                         {
                             if (!_isLoading)
                             {
-                                markers.Add(new() { id = _newMarkerName, type = _newMarkerType });
+                                if (_newMarkerName != "")
+                                {
+                                    markers.Add(new() { id = _newMarkerName, type = ReviewToolSetup.markerTypes[_newMarkerType] });
+                                }
                                 _isLoading = true;
                                 _newMarkerName = "";
                                 _newMarkerType = 0;
+                                ReviewToolSetup._WriteExportScript(_instance, markers);
                                 ReviewToolSetup._WriteToolInstanceCS(ReviewToolSetup._SanitizeName(_instance.gameObject.name), markers);
                             }
                         }
@@ -93,23 +97,23 @@ namespace CodySource
 
                         if (!_isLoading)
                         {
-                            (string id, int type) _remove = new() { id = "", type = -1 };
+                            (string id, string type) _remove = new() { id = "", type = "" };
                             markers.ForEach(m =>
                             {
                                 EditorGUILayout.BeginHorizontal();
                                 GUI.backgroundColor = Color.red;
                                 if (GUILayout.Button("X", GUILayout.MaxWidth(20f))) _remove = m;
                                 GUI.backgroundColor = Color.white;
-                                GUILayout.Label($"({ReviewToolSetup.markerTypes[m.type]})", GUILayout.MaxWidth(60f));
+                                GUILayout.Label($"({m.type})", GUILayout.MaxWidth(60f));
                                 EditorGUILayout.PropertyField(props[m.id]);
                                 EditorGUILayout.EndHorizontal();
                                 GUILayout.Space(10f);
                             });
-                            if (_remove.type != -1)
+                            if (_remove.type != "")
                             {
                                 markers.Remove(_remove);
                                 _isLoading = true;
-                                ReviewToolSetup._WriteExportScript(_instance);
+                                ReviewToolSetup._WriteExportScript(_instance, markers);
                                 ReviewToolSetup._WriteToolInstanceCS(ReviewToolSetup._SanitizeName(_instance.gameObject.name), markers);
                             }
                         }
@@ -125,25 +129,6 @@ namespace CodySource
                 else
                 {
                     if (GUILayout.Button("MARKER CONFIG", EditorStyles.foldoutHeader)) markersExpanded = true;
-                }
-                EditorGUILayout.EndVertical();
-
-                GUILayout.Space(10f);
-
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                if (miscExpanded)
-                {
-                    if (GUILayout.Button("MISC CONFIG", EditorStyles.foldoutHeader)) miscExpanded = false;
-                    GUILayout.Space(3f);
-                    foreach (KeyValuePair<string, SerializedProperty> prop in props)
-                    {
-                        if (!markers.Exists(m => m.id == prop.Key) && prop.Key.StartsWith("_")) EditorGUILayout.PropertyField(prop.Value);
-                    }
-                    GUILayout.Space(3f);
-                }
-                else
-                {
-                    if (GUILayout.Button("MISC CONFIG", EditorStyles.foldoutHeader)) miscExpanded = true;
                 }
                 EditorGUILayout.EndVertical();
 
@@ -164,9 +149,11 @@ namespace CodySource
                     props.Add(_fields[i].Name, serializedObject.FindProperty(_fields[i].Name));
                     if (!_fields[i].Name.StartsWith("SQL") && !_fields[i].FieldType.ToString().Contains("UnityEvent"))
                     {
-                        markers.Add(new() { 
-                            id = _fields[i].Name, 
-                            type = ReviewToolSetup.markerTypes.IndexOf(ReviewToolSetup._TypeToFriendly(_fields[i].FieldType.ToString()))});
+                        markers.Add(new()
+                        {
+                            id = _fields[i].Name,
+                            type = _fields[i].FieldType.ToString().Replace("System.", "").ToLower()
+                        });
                     }
                 }
             }

@@ -25,16 +25,6 @@ namespace CodySource
             public string SQL_PASS = "";
 
             /// <summary>
-            /// Triggered whenever a timestamp is calculated
-            /// </summary>
-            public UnityEvent<string> _onTimeStampCalculated = new UnityEvent<string>();
-
-            /// <summary>
-            /// Triggered whenever a play duration is calculated
-            /// </summary>
-            public UnityEvent<float> _onPlayDurationCalculated = new UnityEvent<float>();
-
-            /// <summary>
             /// Triggers when the export fails
             /// </summary>
             public UnityEvent<EXPORT_STATUS> onExportFailed = new UnityEvent<EXPORT_STATUS>();
@@ -43,20 +33,6 @@ namespace CodySource
             /// Triggers when the export succeeds
             /// </summary>
             public UnityEvent<EXPORT_STATUS> onExportComplete = new UnityEvent<EXPORT_STATUS>();
-
-            #endregion
-
-            #region PUBLIC METHODS
-
-            /// <summary>
-            /// Calculates a timestamp and invokes the calculation event
-            /// </summary>
-            public void CalculateTimeStamp() => _onTimeStampCalculated?.Invoke(System.DateTime.Now.ToString());
-
-            /// <summary>
-            /// Calculates the play duration and invokes the calculation event
-            /// </summary>
-            public void CalculatePlayDuration() => _onPlayDurationCalculated?.Invoke(Time.time);
 
             #endregion
 
@@ -79,13 +55,6 @@ namespace CodySource
                     }, pJSON
                     ));
             }
-
-            //  TODO:   Add debug log method for export status
-
-            /// <summary>
-            /// Return a filtered version of the text
-            /// </summary>
-            protected string _Filter(string pText) => Regex.Replace(pText, @"\W+ ", "");
 
             /// <summary>
             /// Performs the actual object eqport

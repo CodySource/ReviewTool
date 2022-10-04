@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Reflection;
 #endif
 
 namespace CodySource
@@ -16,58 +17,22 @@ namespace CodySource
 
 #if UNITY_EDITOR
 
-            public static List<string> markerTypes = new List<string> { "Flag", "Number", "Text" };
+            public static List<string> markerTypes = new List<string> { "bool", "float", "string" };
 
             #region INTERNAL METHODS
 
             /// <summary>
             /// Writes the instance of the new tool script
             /// </summary>
-            internal static void _WriteToolInstanceCS(string pName, List<(string id, int type)> pMarkers)
+            internal static void _WriteToolInstanceCS(string pName, List<(string id, string type)> pMarkers)
             {
-                string _output =
-                    "using System.Collections;\n" +
-                    "using System.Collections.Generic;\n" +
-                    "using UnityEngine;\n" +
-                    "using Newtonsoft.Json;\n" +
-                    "#if UNITY_EDITOR\n" +
-                    "using UnityEditor;\n" +
-                    "#endif\n" +
-                    "\n" +
-                    "namespace CodySource\n" +
-                    "{\n" +
-                    "\tnamespace ReviewTool\n" +
-                    "\t{\n" +
-                    $"\t\tpublic class {_SanitizeName(pName)} : ReviewToolInstance\n" +
-                    "\t\t{\n" +
-                    "\t\t\t#region MARKERS\n" +
-                    "\n" +
-                    "\t\t\t[MARKERS]\n" +
-                    "\n" +
-                    "\t\t\t#endregion\n" +
-                    "\n" +
-                    "\t\t\t#region EXPORT\n" +
-                    "\n" +
-                    "\t\t\tpublic void Export() {\n" +
-                    "\t\t\t\t_Export(JsonConvert.SerializeObject(\n" +
-                    "\t\t\t\t\tnew ExportData(){\n" +
-                    "\t\t\t\t\t\t[EXPORT_DATA]\n" +
-                    "\t\t\t\t\t}));\n" +
-                    "\t\t\t}\n" +
-                    "\n" +
-                    "\t\t\tpublic struct ExportData {\n" +
-                    "\t\t\t\t[EXPORT_STRUCT]\n" +
-                    "\t\t\t}\n" +
-                    "\n" +
-                    "\t\t\t#endregion\n" +
-                    "\t\t}\n" +
-                    "\t}\n" +
-                    "}";
+                string _output = File.ReadAllText("Packages/com.codysource.reviewtool/Scripts/Runtime/ReviewToolTemplate.cs");
 
                 _output = _output
-                    .Replace("\t\t\t[MARKERS]\n", _GenerateMarkers(pMarkers))
-                    .Replace("\t\t\t\t\t\t[EXPORT_DATA]\n", _GenerateExportData(pMarkers))
-                    .Replace("\t\t\t\t[EXPORT_STRUCT]\n", _GenerateExportStruct(pMarkers));
+                    .Replace("ReviewToolTemplate", _SanitizeName(pName))
+                    .Replace("//\t[MARKERS]\n", _GenerateMarkers(pMarkers))
+                    .Replace("//\t[EXPORT_DATA]\n", _GenerateExportData(pMarkers))
+                    .Replace("//\t[EXPORT_STRUCT]\n", _GenerateExportStruct(pMarkers));
 
                 //  Write file
                 Directory.CreateDirectory("./Assets/ReviewTool/");
@@ -81,82 +46,25 @@ namespace CodySource
             /// <summary>
             /// Used to write the necessary php file for the php_sql upload method
             /// </summary>
-            internal static void _WriteExportScript(ReviewToolInstance pInstance)
+            internal static void _WriteExportScript(ReviewToolInstance pInstance, List<(string id, string type)> pMarkers)
             {
-                //  TODO:   Fix bug with this script (not loading pInstance)
-                string _output = "<?php\n" +
-                    "header('Access-Control-Allow-Origin: *');\n" +
-                    $"const projectKey = '{pInstance.SQL_KEY}';\n" +
-                    $"const tableName = '{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_")}_Review';\n" +
-                    $"const db_HOST = '{pInstance.SQL_HOST}';\n" +
-                    $"const db_NAME = '{pInstance.SQL_DB}';\n" +
-                    $"const db_USER = '{pInstance.SQL_USER}';\n" +
-                    $"const db_PASS = '{pInstance.SQL_PASS}';\n" +
-                    "if (!isset($_POST['key'])) Error('Missing or invalid project key!');\n" +
-                    "if (!isset($_POST['payload'])) Error('Missing data!');\n" +
-                    "try {\n" +
-                    "\t$obj = json_decode(preg_replace('/[^\\w.! {}:,\\[\\]\"]/ ','',$_POST['payload']));\n" +
-                    "\tif ($obj == null) throw new Exception('Invalid json payload!);\n" +
-                    "\t$submission = json_encode($obj); }\n" +
-                    "catch (Exception $e) {Error('Invalid json payload!');}\n" +
-                    "if (ConnectToDB()) {\n" +
-                    "\tif (VerifyTables()) {\n" +
-                    "\t\tif (StoreSubmission($submission)) {\n" +
-                    "\t\t\t$mysqli->close();\n" +
-                    "\t\t\tSuccess('submission_success', gmdate('Y-m-d H:i:s'));}\n" +
-                    "\t\telse Error('An unkown error occured while storing submission.  Check your database permissions.');}\n" +
-                    "\telse Error('An unkown error occured while creating/verifying tables.  Check your database permissions.');}\n" +
-                    "else Error('Unable to connect to database.');\n" +
-                    "function Error($text)\n" +
-                    "{\n" +
-                    "\t$output = new stdClass;\n" +
-                    "\t$output->success = false;\n" +
-                    "\t$output->error = $text;\n" +
-                    "\tdie(json_encode($output));\n" +
-                    "}\n" +
-                    "function Success()\n" +
-                    "{\n" +
-                    "\t$output = new stdClass;\n" +
-                    "\t$output->success = true;\n" +
-                    "\t$argCount = func_num_args();\n" +
-                    "\tif ($argCount % 2 != 0) return;\n" +
-                    "\t$args = func_get_args();\n" +
-                    "\tfor ($i = 0; $i < $argCount; $i += 2)\n" +
-                    "\t{\n" +
-                    "\t\t$arg = func_get_arg($i);\n" +
-                    "\t\t$val = func_get_arg($i + 1);\n" +
-                    "\t\t$output->$arg = $val;\n" +
-                    "\t}\n" +
-                    "\tdie(json_encode($output));\n" +
-                    "}\n" +
-                    "$mysqli; $timestamp;\n" +
-                    "function ConnectToDB()\n" +
-                    "{\n" +
-                    "\tglobal $mysqli, $timestamp;\n" +
-                    "\t$mysqli = new mysqli(db_HOST, db_USER, db_PASS, db_NAME);\n" +
-                    "\tif ($mysqli->connect_errno)\n" +
-                    "{\n" +
-                    "\terror_log('Connect Error: '.$mysqli->connect_error,0);\n" +
-                    "\treturn false;\n" +
-                    "}\n" +
-                    "\t$timestamp = date(DATE_RFC3339);\n" +
-                    "\treturn true;\n" +
-                    "}\n" +
-                    "function VerifyTables()\n" +
-                    "{\n" +
-                    "\tglobal $mysqli, $timestamp;\n" +
-                    "\tif ($mysqli->query('CREATE TABLE IF NOT EXISTS '.tableName.' (Submission VARCHAR(1023)); ')) return true;\n" +
-                    "\terror_log('Verify Tables Error: '.$mysqli->error,0);\n" +
-                    "\treturn false;\n" +
-                    "}\n" +
-                    "function StoreSubmission($pText)\n" +
-                    "{\n" +
-                    "\tglobal $mysqli, $timestamp;\n" +
-                    "\tif ($mysqli->query('INSERT INTO '.tableName.' (Submission) VALUES(\\''.$pText.'\\');')) return true;\n" +
-                    "\terror_log('Store Submission Error: '.$mysqli->error,0);\n" +
-                    "\treturn false;\n" +
-                    "}\n" +
-                    "?>";
+
+                //  Breakout if the instance hasn't been created yet
+                if (pInstance == null) return;
+
+                string _headers = "";
+                pMarkers.ForEach(m => _headers += m.id + ",");
+                _headers = _headers != "" ? _headers.Substring(0, _headers.Length - 1) : "";
+
+                string _output = File.ReadAllText("Packages/com.codysource.reviewtool/Scripts/Runtime/ReviewToolTemplate.php")
+                    .Replace("[PROJECT_KEY]", pInstance.SQL_KEY)
+                    .Replace("[TABLE_NAME]", $"{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_")}_Review")
+                    .Replace("[DB_HOST]", pInstance.SQL_HOST)
+                    .Replace("[DB_NAME]", pInstance.SQL_DB)
+                    .Replace("[DB_USER]", pInstance.SQL_USER)
+                    .Replace("[DB_PASS]", pInstance.SQL_PASS)
+                    .Replace("[HEADERS]", _headers)
+                    .Replace("[NAME]", pInstance.name);
 
                 //  Write file
                 Directory.CreateDirectory("./Assets/ReviewTool/");
@@ -168,47 +76,23 @@ namespace CodySource
             /// </summary>
             internal static string _SanitizeName(string pName) => Regex.Replace(Regex.Replace(pName, @"\W+", ""), @"^\d+", "");
 
-            internal static string _FriendlyToType(string pFriendly)
-            {
-                return pFriendly switch
-                {
-                    "Flag" => "bool",
-                    "Number" => "float",
-                    "Text" => "string",
-                    _ => ""
-                };
-            }
-
-            internal static string _TypeToFriendly(string pType)
-            {
-                return pType switch
-                {
-                    "System.Bool" => "Flag",
-                    "System.Single" => "Number",
-                    "System.String" => "Text",
-                    _ => ""
-                };
-            }
-
             /// <summary>
             /// Generates the markers and their accessors / mutators
             /// </summary>
-            private static string _GenerateMarkers(List<(string id, int type)> pMarkers)
+            private static string _GenerateMarkers(List<(string id, string type)> pMarkers)
             {
                 if (pMarkers == null || pMarkers.Count == 0) return "\n";
                 string _out = "";
                 pMarkers.ForEach(m => {
-                    string _type = _FriendlyToType(markerTypes[m.type]);
                     _out += 
                     $"\t\t\t//\t{m.id} Accessors / Mutators / Special Methods \n" + 
-                    $"\t\t\tpublic {_type} {m.id};\n" +
-                    $"\t\t\tpublic {_type} Get_{m.id}() => {m.id};\n" +
-                    $"\t\t\tpublic void Set_{m.id}({_type} pVal) => {m.id} = pVal;\n";
-                    _out += _type switch
+                    $"\t\t\tpublic {m.type} {m.id};\n" +
+                    $"\t\t\tpublic {m.type} Get_{m.id}() => {m.id};\n" +
+                    $"\t\t\tpublic void Set_{m.id}({m.type} pVal) => {m.id} = pVal;\n";
+                    _out += m.type switch
                     {
                         "bool" => $"\t\t\tpublic void Toggle_{m.id}() => {m.id} = !{m.id};\n",
                         "float" => $"\t\t\tpublic void Add_{m.id}(float pVal) => {m.id} += pVal;\n",
-                        "string" => $"\t\t\tpublic void Filter_{m.id}(string pVal) => {m.id} = _Filter({m.id});\n",
                         _ => ""
                     };
                     _out += "\n";
@@ -219,7 +103,7 @@ namespace CodySource
             /// <summary>
             /// Generates the export class for the instance
             /// </summary>
-            private static string _GenerateExportData(List<(string id, int type)> pMarkers)
+            private static string _GenerateExportData(List<(string id, string type)> pMarkers)
             {
                 if (pMarkers == null || pMarkers.Count == 0) return "\n";
                 string _out = "";
@@ -230,11 +114,11 @@ namespace CodySource
             /// <summary>
             /// Generates the export class for the instance
             /// </summary>
-            private static string _GenerateExportStruct(List<(string id, int type)> pMarkers)
+            private static string _GenerateExportStruct(List<(string id, string type)> pMarkers)
             {
                 if (pMarkers == null || pMarkers.Count == 0) return "\n";
                 string _out = "";
-                pMarkers.ForEach(m => { _out += $"\t\t\t\tpublic {_FriendlyToType(markerTypes[m.type])} {m.id};\n"; });
+                pMarkers.ForEach(m => { _out += $"\t\t\t\tpublic {m.type} {m.id};\n"; });
                 return _out;
             }
 
