@@ -55,7 +55,7 @@ function Toggle(element) { var x = new XMLHttpRequest(); x.onreadystatechange = 
 }
 if (!isset($_POST['key'])) Error('Missing or invalid project key!');
 if (!isset($_POST['payload'])) Error('Missing data!');
-try { $obj = json_decode($_POST['payload']); $submission = json_encode($obj); }
+try { $obj = json_decode(str_replace('\\n', '<br />', $_POST['payload'])); $submission = json_encode($obj); }
 catch (Exception $e) {Error('Invalid json payload!');}
 if (ConnectToDB()) {
 	if (VerifyTables()) {
