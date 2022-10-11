@@ -22,28 +22,6 @@ namespace CodySource
             #region INTERNAL METHODS
 
             /// <summary>
-            /// Writes the instance of the new tool script
-            /// </summary>
-            internal static void _WriteToolInstanceCS(string pName, List<(string id, string type)> pMarkers)
-            {
-                string _output = File.ReadAllText("Packages/com.codysource.reviewtool/Scripts/Runtime/ReviewToolTemplate.cs");
-
-                _output = _output
-                    .Replace("ReviewToolTemplate", _SanitizeName(pName))
-                    .Replace("//\t[MARKERS]", _GenerateMarkers(pMarkers))
-                    .Replace("//\t[EXPORT_DATA]", _GenerateExportData(pMarkers))
-                    .Replace("//\t[EXPORT_STRUCT]", _GenerateExportStruct(pMarkers));
-
-                //  Write file
-                Directory.CreateDirectory("./Assets/ReviewTool/");
-                File.WriteAllText($"./Assets/ReviewTool/{_SanitizeName(pName)}.cs", _output);
-
-                //  Import the new script
-                AssetDatabase.ImportAsset($"Assets/ReviewTool/{_SanitizeName(pName)}.cs");
-                AssetDatabase.Refresh();
-            }
-
-            /// <summary>
             /// Used to write the necessary php file for the php_sql upload method
             /// </summary>
             internal static void _WriteExportScript(ReviewToolInstance pInstance, List<(string id, string type)> pMarkers)
@@ -69,6 +47,28 @@ namespace CodySource
                 //  Write file
                 Directory.CreateDirectory("./Assets/ReviewTool/");
                 File.WriteAllText($"./Assets/ReviewTool/{pInstance.name}.php", _output);
+            }
+
+            /// <summary>
+            /// Writes the instance of the new tool script
+            /// </summary>
+            internal static void _WriteToolInstanceCS(string pName, List<(string id, string type)> pMarkers)
+            {
+                string _output = File.ReadAllText("Packages/com.codysource.reviewtool/Scripts/Runtime/ReviewToolTemplate.cs");
+
+                _output = _output
+                    .Replace("ReviewToolTemplate", _SanitizeName(pName))
+                    .Replace("//\t[MARKERS]", _GenerateMarkers(pMarkers))
+                    .Replace("//\t[EXPORT_DATA]", _GenerateExportData(pMarkers))
+                    .Replace("//\t[EXPORT_STRUCT]", _GenerateExportStruct(pMarkers));
+
+                //  Write file
+                Directory.CreateDirectory("./Assets/ReviewTool/");
+                File.WriteAllText($"./Assets/ReviewTool/{_SanitizeName(pName)}.cs", _output);
+
+                //  Import the new script
+                AssetDatabase.ImportAsset($"Assets/ReviewTool/{_SanitizeName(pName)}.cs");
+                AssetDatabase.Refresh();
             }
 
             /// <summary>
@@ -109,7 +109,11 @@ namespace CodySource
             {
                 if (pMarkers == null || pMarkers.Count == 0) return "\n";
                 string _out = "";
-                pMarkers.ForEach(m => { _out += $"\t\t\t\t\t\t{m.id} = Get_{m.id}(),\n"; });
+                int _count = 0;
+                pMarkers.ForEach(m => {
+                    _count++;
+                    _out += $"\t\t\t\t\t\t{m.id} = Get_{m.id}()," + (_count < pMarkers.Count ? "\n" : ""); 
+                });
                 return _out;
             }
 
@@ -120,7 +124,11 @@ namespace CodySource
             {
                 if (pMarkers == null || pMarkers.Count == 0) return "\n";
                 string _out = "";
-                pMarkers.ForEach(m => { _out += $"\t\t\t\tpublic {m.type} {m.id};\n"; });
+                int _count = 0;
+                pMarkers.ForEach(m => {
+                    _count++; 
+                    _out += $"\t\t\t\tpublic {m.type} {m.id};" + (_count < pMarkers.Count ? "\n" : ""); 
+                });
                 return _out;
             }
 

@@ -103,7 +103,7 @@ function ConnectToDB()
 function VerifyTables()
 {
 	global $mysqli, $timestamp;
-	if ($mysqli->query('CREATE TABLE IF NOT EXISTS '.tableName.' (id INT NOT NULL AUTO_INCREMENET FIRST PRIMARY KEY, Complete BOOLEAN, Submission VARCHAR(1023)); ')) return true;
+	if ($mysqli->query('CREATE TABLE IF NOT EXISTS '.tableName.' (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, Complete BOOLEAN, Submission VARCHAR(1023));')) return true;
 	error_log('Verify Tables Error: '.$mysqli->error,0);
 	return false;
 }

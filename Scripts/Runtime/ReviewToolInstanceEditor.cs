@@ -24,7 +24,6 @@ namespace CodySource
             Dictionary<string, SerializedProperty> props = new Dictionary<string, SerializedProperty>();
             bool exportExpanded = false;
             bool markersExpanded = true;
-            bool miscExpanded = false;
             public override void OnInspectorGUI()
             {
                 ReviewToolInstance _instance = (ReviewToolInstance)target;
@@ -71,7 +70,7 @@ namespace CodySource
                         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                         EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.LabelField("Marker Name: ", GUILayout.MaxWidth(80f));
-                        _newMarkerName = EditorGUILayout.TextField(_newMarkerName);
+                        _newMarkerName = GUILayout.TextField(ReviewToolSetup._SanitizeName(_newMarkerName));
                         _newMarkerType = Mathf.Max(EditorGUILayout.Popup(_newMarkerType, ReviewToolSetup.markerTypes.ToArray(), GUILayout.MaxWidth(80f)));
                         EditorGUILayout.EndHorizontal();
                         GUI.backgroundColor = Color.green;
@@ -153,6 +152,8 @@ namespace CodySource
                         {
                             id = _fields[i].Name,
                             type = _fields[i].FieldType.ToString().Replace("System.", "").ToLower()
+                                .Replace("single","float")
+                                .Replace("boolean","bool")
                         });
                     }
                 }

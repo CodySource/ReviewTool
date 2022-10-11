@@ -5,6 +5,7 @@ using UnityEngine.Events;
 using Newtonsoft.Json;
 using UnityEngine.Networking;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace CodySource
 {
@@ -33,6 +34,20 @@ namespace CodySource
             /// Triggers when the export succeeds
             /// </summary>
             public UnityEvent<EXPORT_STATUS> onExportComplete = new UnityEvent<EXPORT_STATUS>();
+
+            /// <summary>
+            /// Gets a utc date time string
+            /// </summary>
+            public static string timestamp => System.Xml.XmlConvert.ToString(System.DateTime.Now, System.Xml.XmlDateTimeSerializationMode.Utc);
+
+            #endregion
+
+            #region PUBLIC METHODS
+
+            /// <summary>
+            /// Gets all active instances of a review tool
+            /// </summary>
+            public static List<ReviewToolInstance> GetAllInstances() => new List<ReviewToolInstance>(FindObjectsOfType<ReviewToolInstance>());
 
             #endregion
 

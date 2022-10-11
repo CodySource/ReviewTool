@@ -15,7 +15,6 @@ namespace CodySource
 			#region MARKERS
 
 //	[MARKERS]
-
 			#endregion
 
 			#region EXPORT
