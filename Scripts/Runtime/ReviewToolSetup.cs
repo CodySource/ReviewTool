@@ -30,9 +30,9 @@ namespace CodySource
 
                 _output = _output
                     .Replace("ReviewToolTemplate", _SanitizeName(pName))
-                    .Replace("//\t[MARKERS]\n", _GenerateMarkers(pMarkers))
-                    .Replace("//\t[EXPORT_DATA]\n", _GenerateExportData(pMarkers))
-                    .Replace("//\t[EXPORT_STRUCT]\n", _GenerateExportStruct(pMarkers));
+                    .Replace("//\t[MARKERS]", _GenerateMarkers(pMarkers))
+                    .Replace("//\t[EXPORT_DATA]", _GenerateExportData(pMarkers))
+                    .Replace("//\t[EXPORT_STRUCT]", _GenerateExportStruct(pMarkers));
 
                 //  Write file
                 Directory.CreateDirectory("./Assets/ReviewTool/");
@@ -83,7 +83,9 @@ namespace CodySource
             {
                 if (pMarkers == null || pMarkers.Count == 0) return "\n";
                 string _out = "";
+                int _count = 0;
                 pMarkers.ForEach(m => {
+                    _count++;
                     _out += 
                     $"\t\t\t//\t{m.id} Accessors / Mutators / Special Methods \n" + 
                     $"\t\t\tpublic {m.type} {m.id};\n" +
@@ -95,7 +97,7 @@ namespace CodySource
                         "float" => $"\t\t\tpublic void Add_{m.id}(float pVal) => {m.id} += pVal;\n",
                         _ => ""
                     };
-                    _out += "\n";
+                    _out += (_count < pMarkers.Count) ? "\n" : "";
                 });
                 return _out;
             }
