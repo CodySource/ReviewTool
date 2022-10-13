@@ -24,7 +24,7 @@ namespace CodySource
             /// <summary>
             /// Used to write the necessary php file for the php_sql upload method
             /// </summary>
-            internal static void _WriteExportScript(ReviewToolInstance pInstance, List<(string id, string type)> pMarkers)
+            internal static void _WriteExportScript(ReviewToolInstance pInstance, List<ReviewToolMarker> pMarkers)
             {
 
                 //  Breakout if the instance hasn't been created yet
@@ -52,7 +52,7 @@ namespace CodySource
             /// <summary>
             /// Writes the instance of the new tool script
             /// </summary>
-            internal static void _WriteToolInstanceCS(string pName, List<(string id, string type)> pMarkers)
+            internal static void _WriteToolInstanceCS(string pName, List<ReviewToolMarker> pMarkers)
             {
                 string _output = File.ReadAllText("Packages/com.codysource.reviewtool/Scripts/Runtime/ReviewToolTemplate.cs");
 
@@ -79,7 +79,7 @@ namespace CodySource
             /// <summary>
             /// Generates the markers and their accessors / mutators
             /// </summary>
-            private static string _GenerateMarkers(List<(string id, string type)> pMarkers)
+            private static string _GenerateMarkers(List<ReviewToolMarker> pMarkers)
             {
                 if (pMarkers == null || pMarkers.Count == 0) return "\n";
                 string _out = "";
@@ -105,7 +105,7 @@ namespace CodySource
             /// <summary>
             /// Generates the export class for the instance
             /// </summary>
-            private static string _GenerateExportData(List<(string id, string type)> pMarkers)
+            private static string _GenerateExportData(List<ReviewToolMarker> pMarkers)
             {
                 if (pMarkers == null || pMarkers.Count == 0) return "\n";
                 string _out = "";
@@ -120,7 +120,7 @@ namespace CodySource
             /// <summary>
             /// Generates the export class for the instance
             /// </summary>
-            private static string _GenerateExportStruct(List<(string id, string type)> pMarkers)
+            private static string _GenerateExportStruct(List<ReviewToolMarker> pMarkers)
             {
                 if (pMarkers == null || pMarkers.Count == 0) return "\n";
                 string _out = "";
@@ -136,6 +136,12 @@ namespace CodySource
 
 #endif
 
+        }
+
+        public struct ReviewToolMarker
+        {
+            public string id;
+            public string type;
         }
     }
 }

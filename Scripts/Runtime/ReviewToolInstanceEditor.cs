@@ -20,7 +20,7 @@ namespace CodySource
             string _newMarkerName = "";
             int _newMarkerType = 0;
             bool _isLoading = false;
-            List<(string id, string type)> markers = new List<(string id, string type)> { };
+            List<ReviewToolMarker> markers = new List<ReviewToolMarker> { };
             Dictionary<string, SerializedProperty> props = new Dictionary<string, SerializedProperty>();
             bool exportExpanded = false;
             bool markersExpanded = true;
@@ -96,7 +96,7 @@ namespace CodySource
 
                         if (!_isLoading)
                         {
-                            (string id, string type) _remove = new() { id = "", type = "" };
+                            ReviewToolMarker _remove = new ReviewToolMarker() { id = "", type = "" };
                             markers.ForEach(m =>
                             {
                                 EditorGUILayout.BeginHorizontal();
