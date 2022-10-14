@@ -55,7 +55,7 @@ function Toggle(element) { var x = new XMLHttpRequest(); x.onreadystatechange = 
 }
 if (!isset($_POST['key'])) Error('Missing or invalid project key!');
 if (!isset($_POST['payload'])) Error('Missing data!');
-try { $obj = json_decode(str_replace('\\n', '<br />', $_POST['payload'])); $submission = json_encode($obj); }
+try { $submission = str_replace('\\n', '<br />', $_POST['payload']); }
 catch (Exception $e) {Error('Invalid json payload!');}
 if (ConnectToDB()) {
 	if (VerifyTables()) {
@@ -110,7 +110,10 @@ function VerifyTables()
 function StoreSubmission($pText)
 {
 	global $mysqli, $timestamp;
-	if ($mysqli->query('INSERT INTO '.tableName.' (Complete, Submission) VALUES(0, \''.$pText.'\');')) return true;
+	$q = $mysqli->prepare('INSERT INTO '.tableName.' (Complete, Submission) VALUES(0, ?)');
+	$json = $pText;
+	$q->bind_param('s', $json);
+	if ($q->execute()) return true;
 	error_log('Store Submission Error: '.$mysqli->error,0);
 	return false;
 }
