@@ -137,11 +137,5 @@ namespace CodySource
 #endif
 
         }
-
-        public struct ReviewToolMarker
-        {
-            public string id;
-            public string type;
-        }
     }
 }
