@@ -81,7 +81,7 @@ namespace CodySource
                             {
                                 if (_newMarkerName != "")
                                 {
-                                    markers.Add(new() { id = _newMarkerName, type = ReviewToolSetup.markerTypes[_newMarkerType] });
+                                    markers.Add(new ReviewToolMarker() { id = _newMarkerName, type = ReviewToolSetup.markerTypes[_newMarkerType] });
                                 }
                                 _isLoading = true;
                                 _newMarkerName = "";
@@ -148,7 +148,7 @@ namespace CodySource
                     props.Add(_fields[i].Name, serializedObject.FindProperty(_fields[i].Name));
                     if (!_fields[i].Name.StartsWith("SQL") && !_fields[i].FieldType.ToString().Contains("UnityEvent"))
                     {
-                        markers.Add(new()
+                        markers.Add(new ReviewToolMarker()
                         {
                             id = _fields[i].Name,
                             type = _fields[i].FieldType.ToString().Replace("System.", "").ToLower()
