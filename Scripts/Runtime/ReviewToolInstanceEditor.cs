@@ -45,8 +45,8 @@ namespace CodySource
                             {
                                 EditorGUILayout.PropertyField(prop.Value);
                             }
+                            GUILayout.Space(3f);
                         }
-                        GUILayout.Space(3f);
                     }
                 }
                 else
