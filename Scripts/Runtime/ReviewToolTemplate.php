@@ -128,18 +128,17 @@ function PullTable($cols)
 	$result = $mysqli->query('SELECT * FROM '.tableName);
 	if ($result->num_rows == 0) return '';
 	$output = '';
-	$index = 0;
 	while ($row = $result->fetch_assoc())
 	{
 		$obj = json_decode($row['Submission']);
 		$complete = $row['Complete'];
-		$output .= '<tr id="'.$index.'"'.(($complete == 1)? ' class="complete"':' class=""').'><td><button onclick="Toggle('.$index.');">'.(($complete == 1)? 'X':'✓').'</td>';
+		$i = $row['id'];
+		$output .= '<tr id="'.$i.'"'.(($complete == 1)? ' class="complete"':' class=""').'><td><button onclick="Toggle('.$i.');">'.(($complete == 1)? 'X':'✓').'</td>';
 		foreach($cols as $header)
 		{
 			$output .= '<td>'.((isset($obj -> $header))? $obj -> $header:'').'</td>';
 		}
 		$output .= '</tr>';
-		$index ++;
 	}
 	$mysqli->close();
 	return $output;
@@ -152,15 +151,15 @@ function Toggle($cols, $i)
 		error_log('Connect Error: '.$mysqli->connect_error,0);
 		die('An error occured connecting to the database...');
 	}
-	$result = $mysqli->query('SELECT * FROM '.tableName.' WHERE id='.($i + 1));
+	$result = $mysqli->query('SELECT * FROM '.tableName.' WHERE id='.($i));
 	if ($result->num_rows == 0) return 'Unable to find id.';
 	$row = $result->fetch_assoc();
 	$sub = $row['Submission'];
 	$object = json_decode($sub);
 	$cpl = $row['Complete'];
 	$cpl = !$cpl;
-	$output = '<td>'.(($row['Complete'])?'true':'false').' cpl = '.(($cpl)?'true':'false').'</td><td>'.$sub.'</td><td>'.($i + 1).'</td>';
-	if ($mysqli->query('UPDATE '.tableName.' SET Complete='.(($cpl)?'1':'0').' WHERE id='.($i + 1)))
+	$output = '<td>'.(($row['Complete'])?'true':'false').' cpl = '.(($cpl)?'true':'false').'</td><td>'.$sub.'</td><td>'.($i).'</td>';
+	if ($mysqli->query('UPDATE '.tableName.' SET Complete='.(($cpl)?'1':'0').' WHERE id='.($i)))
 	{
 		$output = '<td><button onclick="Toggle('.$i.');">'.(($cpl)? 'X':'✓').'</td>';
 		foreach($cols as $header)
