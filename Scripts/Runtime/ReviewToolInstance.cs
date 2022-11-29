@@ -6,12 +6,22 @@ using Newtonsoft.Json;
 using UnityEngine.Networking;
 using System.Text.RegularExpressions;
 using System.Globalization;
+#if UNITY_EDITOR
+using UnityEditor;
+using System.Reflection;
+using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
+using System.IO;
+#endif
 
 namespace CodySource
 {
     namespace ReviewTool
     {
         public abstract class ReviewToolInstance : MonoBehaviour
+#if UNITY_EDITOR
+            , IPreprocessBuildWithReport
+#endif
         {
             #region PROPERTIES
 
@@ -40,9 +50,38 @@ namespace CodySource
             /// </summary>
             public static string timestamp => System.Xml.XmlConvert.ToString(System.DateTime.Now, System.Xml.XmlDateTimeSerializationMode.Utc);
 
+#if UNITY_EDITOR
+
+            /// <summary>
+            /// The callback order for build preprocess
+            /// </summary>
+            public int callbackOrder => 1;
+
+#endif
+
             #endregion
 
             #region PUBLIC METHODS
+
+#if UNITY_EDITOR
+
+            /// <summary>
+            /// Write a new export file on build
+            /// </summary>
+            public void OnPreprocessBuild(BuildReport report)
+            {
+                string name = GetType().ToString().Split('.')[2];
+                if (!File.Exists($"./Assets/ReviewTool/{name}.php")) return;
+
+                string _output = File.ReadAllText($"./Assets/ReviewTool/{name}.php");
+                _output = Regex.Replace(_output, "const tableName = '.+';", $"const tableName = '{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_").Replace("[", "").Replace("]", "").Split('-')[0]}_Review';");
+
+                //  Write file
+                Directory.CreateDirectory("./Assets/ReviewTool/");
+                File.WriteAllText($"./Assets/ReviewTool/{name}.php", _output);
+            }
+
+#endif
 
             /// <summary>
             /// Gets all active instances of a review tool
