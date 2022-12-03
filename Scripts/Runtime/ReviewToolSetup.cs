@@ -36,7 +36,7 @@ namespace CodySource
 
                 string _output = File.ReadAllText("Packages/com.codysource.reviewtool/Scripts/Runtime/ReviewToolTemplate.php")
                     .Replace("[PROJECT_KEY]", pInstance.SQL_KEY)
-                    .Replace("[TABLE_NAME]", $"{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_")}_Review")
+                    .Replace("[TABLE_NAME]", $"{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_").Replace("[", "").Replace("]", "").Split('-')[0]}_Review")
                     .Replace("[DB_HOST]", pInstance.SQL_HOST)
                     .Replace("[DB_NAME]", pInstance.SQL_DB)
                     .Replace("[DB_USER]", pInstance.SQL_USER)
