@@ -1,7 +1,11 @@
 <?php
 header('Access-Control-Allow-Origin: *');
 const projectKey = '[PROJECT_KEY]';
-const tableName = '[TABLE_NAME]';
+$tableName = '[TABLE_NAME]';
+$prevTable = '';
+$prevHeaders = '';
+$nextTable = '';
+$nextHeaders = '';
 const db_HOST = '[DB_HOST]';
 const db_NAME = '[DB_NAME]';
 const db_USER = '[DB_USER]';
@@ -9,7 +13,8 @@ const db_PASS = '[DB_PASS]';
 const header_list = '[HEADERS]';
 if (isset($_GET['key']))
 {
-	$headers = explode(',',header_list);
+	$tableName = (isset($_GET['table']) && $_GET['table'] != '') ? $_GET['table'] : $tableName;
+	$headers = (isset($_GET['headers']) && $_GET['headers'] != '') ? explode(',',$_GET['headers']) : explode(',',header_list);
 	if (isset($_GET['toggle']))
 	{
 		$content = Toggle($headers, $_GET['toggle']);
@@ -24,6 +29,8 @@ if (isset($_GET['key']))
 body { font-family: arial, sans-serif; }
 table { border-collapse: collapse; width: 100%; }
 td, th { border: 1px solid #dddddd; text-align: left; padding: 8px; }
+h2 { text-align:center; width: 100%; }
+h2 button { width: 200px };
 tr:nth-child(even) { background-color: #dddddd; }
 tr.complete { font-style: italic; font-size: 0.9em; color: #ffffff; background-color: #14CA71;}
 .button { width: 40px;}
@@ -35,11 +42,16 @@ function Toggle(element) { var x = new XMLHttpRequest(); x.onreadystatechange = 
 		e.innerHTML = this.responseText;
 		e.className = (this.responseText.includes("✓"))? "" : "complete"; 
 		console.log(this.responseText);}} 
-	x.open("GET", "[NAME].php?key=[PROJECT_KEY]&toggle="+element); x.send(); }
+	x.open("GET", "[NAME].php?key=[PROJECT_KEY]&toggle="+element+"&table='.$tableName.'"); x.send(); }
+function Open(table, headers) { window.location.href = "[NAME].php?key=[PROJECT_KEY]&table="+table+"&headers="+headers; }
 </script>
 </head>
 <body>
-<h2>[TABLE_NAME]</h2>
+<h2>'.
+'<button onclick="'.(($prevTable != "")?'Open(\''.$prevTable.'\',\''.$prevHeaders.'\')">':'">').$prevTable.'</button>'.
+'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$tableName.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.
+'<button onclick="'.(($nextTable != "")?'Open(\''.$nextTable.'\',\''.$nextHeaders.'\')">':'">').$nextTable.'</button>'.
+'</h2>
 <table>
 <tr><th class="button"></th>';
 		foreach ($headers as $header)
@@ -102,15 +114,15 @@ function ConnectToDB()
 }
 function VerifyTables()
 {
-	global $mysqli, $timestamp;
-	if ($mysqli->query('CREATE TABLE IF NOT EXISTS '.tableName.' (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, Complete BOOLEAN, Submission VARCHAR(1023));')) return true;
+	global $mysqli, $timestamp, $tableName;
+	if ($mysqli->query('CREATE TABLE IF NOT EXISTS '.$tableName.' (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, Complete BOOLEAN, Submission VARCHAR(1023));')) return true;
 	error_log('Verify Tables Error: '.$mysqli->error,0);
 	return false;
 }
 function StoreSubmission($pText)
 {
-	global $mysqli, $timestamp;
-	$q = $mysqli->prepare('INSERT INTO '.tableName.' (Complete, Submission) VALUES(0, ?)');
+	global $mysqli, $timestamp, $tableName;
+	$q = $mysqli->prepare('INSERT INTO '.$tableName.' (Complete, Submission) VALUES(0, ?)');
 	$json = $pText;
 	$q->bind_param('s', $json);
 	if ($q->execute()) return true;
@@ -119,13 +131,15 @@ function StoreSubmission($pText)
 }
 function PullTable($cols)
 {
+	global $tableName, $prevTable, $nextTable;
 	$mysqli = new mysqli(db_HOST, db_USER, db_PASS, db_NAME);
 	if ($mysqli->connect_errno)
 	{
 		error_log('Connect Error: '.$mysqli->connect_error,0);
 		die('An error occured connecting to the database...');
 	}
-	$result = $mysqli->query('SELECT * FROM '.tableName);
+	LoadTables($mysqli);
+	$result = $mysqli->query('SELECT * FROM '.$tableName);
 	if ($result->num_rows == 0) return '';
 	$output = '';
 	while ($row = $result->fetch_assoc())
@@ -143,15 +157,47 @@ function PullTable($cols)
 	$mysqli->close();
 	return $output;
 }
+function LoadTables($sql)
+{
+	global $tableName, $prevTable, $nextTable, $prevHeaders, $nextHeaders;
+	$tables = array_column($sql->query('SHOW TABLES')->fetch_all(),0);
+	$curTable = '';
+	for ($i = 0; $i < count($tables); $i++)
+	{
+		$sel = $tables[$i];
+		if (preg_match('/FlexMk2(_\d)+_Review/i', $sel))
+		{
+			error_log('Tables: $prevTable, $curTable, $nextTable');
+			if ($curTable == '' && $tableName != $sel) 
+			{
+				$prevTable = $sel;
+				SetHeaders($sql, $prevTable, $prevHeaders);
+			}
+			else if ($tableName == $sel) $curTable = $sel;
+			else if ($curTable != '' && $tableName != $sel && $nextTable == '') 
+			{
+				$nextTable = $sel;
+				SetHeaders($sql, $nextTable, $nextHeaders);
+				return;
+			}
+		}
+	}
+}
+function SetHeaders($sql, $table, &$headers)
+{
+	$result = $sql->query('SELECT * FROM '.$table.' LIMIT 1');
+	while ($row = $result->fetch_assoc()) { $headers = array_keys($row[0]); return;}
+}
 function Toggle($cols, $i)
 {
+	global $tableName;
 	$mysqli = new mysqli(db_HOST, db_USER, db_PASS, db_NAME);
 	if ($mysqli->connect_errno)
 	{
 		error_log('Connect Error: '.$mysqli->connect_error,0);
 		die('An error occured connecting to the database...');
 	}
-	$result = $mysqli->query('SELECT * FROM '.tableName.' WHERE id='.($i));
+	$result = $mysqli->query('SELECT * FROM '.$tableName.' WHERE id='.($i));
 	if ($result->num_rows == 0) return 'Unable to find id.';
 	$row = $result->fetch_assoc();
 	$sub = $row['Submission'];
@@ -159,7 +205,7 @@ function Toggle($cols, $i)
 	$cpl = $row['Complete'];
 	$cpl = !$cpl;
 	$output = '<td>'.(($row['Complete'])?'true':'false').' cpl = '.(($cpl)?'true':'false').'</td><td>'.$sub.'</td><td>'.($i).'</td>';
-	if ($mysqli->query('UPDATE '.tableName.' SET Complete='.(($cpl)?'1':'0').' WHERE id='.($i)))
+	if ($mysqli->query('UPDATE '.$tableName.' SET Complete='.(($cpl)?'1':'0').' WHERE id='.($i)))
 	{
 		$output = '<td><button onclick="Toggle('.$i.');">'.(($cpl)? 'X':'✓').'</td>';
 		foreach($cols as $header)
@@ -172,8 +218,8 @@ function Toggle($cols, $i)
 }
 function PullValue($pKey)
 {
-	global $mysqli;
-	$result = $mysqli->query('SELECT * FROM '.tableName.' WHERE saveKey=\''.$pKey.'\'');
+	global $mysqli, $tableName;
+	$result = $mysqli->query('SELECT * FROM '.$tableName.' WHERE saveKey=\''.$pKey.'\'');
 	if ($result->num_rows == 0) return false;
 	$row = $result->fetch_assoc();
 	Success('loadedVal',$row['saveVal']);
