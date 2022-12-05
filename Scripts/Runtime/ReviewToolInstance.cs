@@ -74,7 +74,9 @@ namespace CodySource
                 if (!File.Exists($"./Assets/ReviewTool/{name}.php")) return;
 
                 string _output = File.ReadAllText($"./Assets/ReviewTool/{name}.php");
-                _output = Regex.Replace(_output, "$tableName = '.+';", $"$tableName = '{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_").Replace("[", "").Replace("]", "").Split('-')[0]}_Review';");
+                string search = "\\$tableName = '.+';";
+                string replace = $"$tableName = '{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_").Replace("[", "").Replace("]", "").Split('-')[0]}_Review';";
+                _output = Regex.Replace(_output, search, replace);
 
                 //  Write file
                 Directory.CreateDirectory("./Assets/ReviewTool/");
