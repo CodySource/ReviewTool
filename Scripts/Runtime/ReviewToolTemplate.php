@@ -44,6 +44,7 @@ function Toggle(element) { var x = new XMLHttpRequest(); x.onreadystatechange = 
 		console.log(this.responseText);}} 
 	x.open("GET", "[NAME].php?key=[PROJECT_KEY]&toggle="+element+"&table='.$tableName.'"); x.send(); }
 function Open(table, headers) { window.location.href = "[NAME].php?key=[PROJECT_KEY]&table="+table+"&headers="+headers; }
+function Live() { window.location.href = "[NAME].php?key=[PROJECT_KEY]"; }
 </script>
 </head>
 <body>
@@ -51,6 +52,7 @@ function Open(table, headers) { window.location.href = "[NAME].php?key=[PROJECT_
 '<button onclick="'.(($prevTable != "")?'Open(\''.$prevTable.'\',\''.$prevHeaders.'\')">':'">').$prevTable.'</button>'.
 '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$tableName.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.
 '<button onclick="'.(($nextTable != "")?'Open(\''.$nextTable.'\',\''.$nextHeaders.'\')">':'">').$nextTable.'</button>'.
+'<br/><br/><button onclick="Live()">Live Feedback</button>'.
 '</h2>
 <table>
 <tr><th class="button"></th>';
