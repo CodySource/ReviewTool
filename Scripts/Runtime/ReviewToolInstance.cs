@@ -77,6 +77,9 @@ namespace CodySource
                 string search = "\\$tableName = '.+';";
                 string replace = $"$tableName = '{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_").Replace("[", "").Replace("]", "").Split('-')[0]}_Review';";
                 _output = Regex.Replace(_output, search, replace);
+                search = "\\$live = '.+';";
+                replace = $"$live = '{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_").Replace("[", "").Replace("]", "").Split('-')[0]}_Review';";
+                _output = Regex.Replace(_output, search, replace);
 
                 //  Write file
                 Directory.CreateDirectory("./Assets/ReviewTool/");

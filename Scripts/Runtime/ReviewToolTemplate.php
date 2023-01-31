@@ -1,6 +1,7 @@
 <?php
 header('Access-Control-Allow-Origin: *');
 const projectKey = '[PROJECT_KEY]';
+$live = '[LIVE]';
 $tableName = '[TABLE_NAME]';
 $prevTable = '';
 $prevHeaders = '';
@@ -52,7 +53,7 @@ function Live() { window.location.href = "[NAME].php?key=[PROJECT_KEY]"; }
 '<button onclick="'.(($prevTable != "")?'Open(\''.$prevTable.'\',\''.$prevHeaders.'\')">':'">').$prevTable.'</button>'.
 '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$tableName.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.
 '<button onclick="'.(($nextTable != "")?'Open(\''.$nextTable.'\',\''.$nextHeaders.'\')">':'">').$nextTable.'</button>'.
-'<br/><br/><button onclick="Live()">Live Feedback</button>'.
+'<br/><br/><button onclick="Live()"><b>Live Feedback</b><br/>('.$live.')</button>'.
 '</h2>
 <table>
 <tr><th class="button"></th>';
