@@ -12,7 +12,7 @@ const db_NAME = '[DB_NAME]';
 const db_USER = '[DB_USER]';
 const db_PASS = '[DB_PASS]';
 const header_list = '[HEADERS]';
-if (isset($_GET['key']))
+if (isset($_GET['key']) && $_GET['key'] == projectKey)
 {
 	$tableName = (isset($_GET['table']) && $_GET['table'] != '') ? $_GET['table'] : $tableName;
 	$headers = (isset($_GET['headers']) && $_GET['headers'] != '') ? explode(',',$_GET['headers']) : explode(',',header_list);
