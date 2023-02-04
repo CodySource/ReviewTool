@@ -168,7 +168,8 @@ function LoadTables($sql)
 	for ($i = 0; $i < count($tables); $i++)
 	{
 		$sel = $tables[$i];
-		if (preg_match('/'.$live.split('_')[0].'(_\d)+_Review/i', $sel))
+		$reg = '/'.$live.split('_')[0].'(_\d)+_Review/i';
+		if (preg_match($reg, $sel))
 		{
 			error_log('Tables: $prevTable, $curTable, $nextTable');
 			if ($curTable == '' && $tableName != $sel) 
