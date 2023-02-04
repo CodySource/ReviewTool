@@ -168,7 +168,7 @@ function LoadTables($sql)
 	for ($i = 0; $i < count($tables); $i++)
 	{
 		$sel = $tables[$i];
-		if (preg_match('/FlexMk2(_\d)+_Review/i', $sel))
+		if (preg_match('/'.$live.split('_')[0].'(_\d)+_Review/i', $sel))
 		{
 			error_log('Tables: $prevTable, $curTable, $nextTable');
 			if ($curTable == '' && $tableName != $sel) 
