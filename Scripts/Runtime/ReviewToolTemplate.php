@@ -162,7 +162,7 @@ function PullTable($cols)
 }
 function LoadTables($sql)
 {
-	global $tableName, $prevTable, $nextTable, $prevHeaders, $nextHeaders;
+	global $tableName, $prevTable, $nextTable, $prevHeaders, $nextHeaders, $live;
 	$tables = array_column($sql->query('SHOW TABLES')->fetch_all(),0);
 	$curTable = '';
 	for ($i = 0; $i < count($tables); $i++)
