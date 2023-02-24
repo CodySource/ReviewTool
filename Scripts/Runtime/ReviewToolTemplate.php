@@ -163,26 +163,37 @@ function PullTable($cols)
 function LoadTables($sql)
 {
 	global $tableName, $prevTable, $nextTable, $prevHeaders, $nextHeaders, $live;
-	$tables = array_column($sql->query('SHOW TABLES')->fetch_all(),0);
+	$tables = array_column($sql->query('SHOW TABLES LIKE \'%'.(explode('_',$live)[0]).'%Review\'')->fetch_all(),0);
+	$count = count($tables);
+	for ($i = 0; $i < $count; $i ++)
+	{
+		$tables[$i] = preg_replace('/_(\d+)+/','_'.sprintf('%09s','$1'),$tables[$i]);
+		$vals = explode('_',$tables[$i]);
+		for ($v = 1; $v < 4; $v ++) $vals[$v] = substr($vals[$v],-8);
+		$tables[$i] = join($vals,'_');
+	}
+	sort($tables);
+	for ($i = 0; $i < $count; $i ++)
+	{
+		$vals = explode('_',$tables[$i]);
+		for ($v = 1; $v < 4; $v ++) $vals[$v] = intval(ltrim($vals[$v],'0'));
+		$tables[$i] = join($vals,'_');
+	}
 	$curTable = '';
-	for ($i = 0; $i < count($tables); $i++)
+	for ($i = 0; $i < $count; $i++)
 	{
 		$sel = $tables[$i];
-		if (preg_match('/'.explode('_',$live)[0].'(_\d+)+_Review/i', $sel))
+		if ($curTable == '' && $tableName != $sel) 
 		{
-			error_log('Tables: $prevTable, $curTable, $nextTable');
-			if ($curTable == '' && $tableName != $sel) 
-			{
-				$prevTable = $sel;
-				SetHeaders($sql, $prevTable, $prevHeaders);
-			}
-			else if ($tableName == $sel) $curTable = $sel;
-			else if ($curTable != '' && $tableName != $sel && $nextTable == '') 
-			{
-				$nextTable = $sel;
-				SetHeaders($sql, $nextTable, $nextHeaders);
-				return;
-			}
+			$prevTable = $sel;
+			SetHeaders($sql, $prevTable, $prevHeaders);
+		}
+		else if ($tableName == $sel) $curTable = $sel;
+		else if ($curTable != '' && $tableName != $sel && $nextTable == '') 
+		{
+			$nextTable = $sel;
+			SetHeaders($sql, $nextTable, $nextHeaders);
+			return;
 		}
 	}
 }
