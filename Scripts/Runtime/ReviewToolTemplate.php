@@ -167,16 +167,15 @@ function LoadTables($sql)
 	$count = count($tables);
 	for ($i = 0; $i < $count; $i ++)
 	{
-		$tables[$i] = preg_replace('/_(\d+)+/','_'.sprintf('%09s','$1'),$tables[$i]);
 		$vals = explode('_',$tables[$i]);
-		for ($v = 1; $v < 4; $v ++) $vals[$v] = substr($vals[$v],-8);
+		for ($v = 0; $v < count($vals); $v ++) $vals[$v] = intval($vals[$v]) > 0 ? sprintf('%08d',$vals[$v]) : $vals[$v];
 		$tables[$i] = join($vals,'_');
 	}
 	sort($tables);
 	for ($i = 0; $i < $count; $i ++)
 	{
 		$vals = explode('_',$tables[$i]);
-		for ($v = 1; $v < 4; $v ++) $vals[$v] = intval(ltrim($vals[$v],'0'));
+		for ($v = 0; $v < count($vals); $v ++) $vals[$v] = intval($vals[$v]) > 0 ? sprintf('%01d',$vals[$v]) : $vals[$v];
 		$tables[$i] = join($vals,'_');
 	}
 	$curTable = '';
