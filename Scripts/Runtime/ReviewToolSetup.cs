@@ -34,20 +34,26 @@ namespace CodySource
                 pMarkers.ForEach(m => _headers += m.id + ",");
                 _headers = _headers != "" ? _headers.Substring(0, _headers.Length - 1) : "";
 
-                string _output = File.ReadAllText("Packages/com.codysource.reviewtool/Scripts/Runtime/ReviewToolTemplate.php")
-                    .Replace("[PROJECT_KEY]", pInstance.SQL_KEY)
-                    .Replace("[TABLE_NAME]", $"{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_").Replace("[", "").Replace("]", "").Split('-')[0]}_Review")
-                    .Replace("[LIVE]", $"{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_").Replace("[", "").Replace("]", "").Split('-')[0]}_Review")
-                    .Replace("[DB_HOST]", pInstance.SQL_HOST)
-                    .Replace("[DB_NAME]", pInstance.SQL_DB)
-                    .Replace("[DB_USER]", pInstance.SQL_USER)
-                    .Replace("[DB_PASS]", pInstance.SQL_PASS)
-                    .Replace("[HEADERS]", _headers)
-                    .Replace("[NAME]", pInstance.name);
+                WriteFile("ReviewToolTemplate",pInstance.name);
+                WriteFile("OpenFeedbackTemplate", "OpenFeedback");
 
-                //  Write file
-                Directory.CreateDirectory("./Assets/ReviewTool/");
-                File.WriteAllText($"./Assets/ReviewTool/{pInstance.name}.php", _output);
+                void WriteFile(string pTemplateName, string pName)
+                {
+                    string _output = File.ReadAllText($"Packages/com.codysource.reviewtool/Scripts/Runtime/{pTemplateName}.php")
+                        .Replace("[PROJECT_KEY]", pInstance.SQL_KEY)
+                        .Replace("[TABLE_NAME]", $"{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_").Replace("[", "").Replace("]", "").Split('-')[0]}_Review")
+                        .Replace("[LIVE]", $"{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_").Replace("[", "").Replace("]", "").Split('-')[0]}_Review")
+                        .Replace("[DB_HOST]", pInstance.SQL_HOST)
+                        .Replace("[DB_NAME]", pInstance.SQL_DB)
+                        .Replace("[DB_USER]", pInstance.SQL_USER)
+                        .Replace("[DB_PASS]", pInstance.SQL_PASS)
+                        .Replace("[HEADERS]", _headers)
+                        .Replace("[NAME]", pName);
+
+                    //  Write file
+                    Directory.CreateDirectory("./Assets/ReviewTool/");
+                    File.WriteAllText($"./Assets/ReviewTool/{pName}.php", _output);
+                }
             }
 
             /// <summary>

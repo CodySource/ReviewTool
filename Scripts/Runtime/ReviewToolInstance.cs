@@ -73,17 +73,23 @@ namespace CodySource
                 string name = GetType().ToString().Split('.')[2];
                 if (!File.Exists($"./Assets/ReviewTool/{name}.php")) return;
 
-                string _output = File.ReadAllText($"./Assets/ReviewTool/{name}.php");
-                string search = "\\$tableName = '.+';";
-                string replace = $"$tableName = '{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_").Replace("[", "").Replace("]", "").Split('-')[0]}_Review';";
-                _output = Regex.Replace(_output, search, replace);
-                search = "\\$live = '.+';";
-                replace = $"$live = '{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_").Replace("[", "").Replace("]", "").Split('-')[0]}_Review';";
-                _output = Regex.Replace(_output, search, replace);
+                UpdateFile(name);
+                UpdateFile("OpenFeedback");
 
-                //  Write file
-                Directory.CreateDirectory("./Assets/ReviewTool/");
-                File.WriteAllText($"./Assets/ReviewTool/{name}.php", _output);
+                void UpdateFile(string pName)
+                {
+                    string _output = File.ReadAllText($"./Assets/ReviewTool/{pName}.php");
+                    string search = "\\$tableName = '.+';";
+                    string replace = $"$tableName = '{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_").Replace("[", "").Replace("]", "").Split('-')[0]}_Review';";
+                    _output = Regex.Replace(_output, search, replace);
+                    search = "\\$live = '.+';";
+                    replace = $"$live = '{Application.productName.Replace(" ", "_")}_{Application.version.Replace(".", "_").Replace("[", "").Replace("]", "").Split('-')[0]}_Review';";
+                    _output = Regex.Replace(_output, search, replace);
+
+                    //  Write file
+                    Directory.CreateDirectory("./Assets/ReviewTool/");
+                    File.WriteAllText($"./Assets/ReviewTool/{pName}.php", _output);
+                }
             }
 
 #endif
