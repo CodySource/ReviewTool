@@ -6,6 +6,7 @@
   "unity": "2020.3",
   "unityRelease": "15f2",
   "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.0.2"
  },
   "author": {
     "name": "Cody Source"
