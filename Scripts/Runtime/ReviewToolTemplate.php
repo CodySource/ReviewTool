@@ -2,11 +2,6 @@
 header('Access-Control-Allow-Origin: *');
 const projectKey = '[PROJECT_KEY]';
 $live = '[LIVE]';
-$tableName = '[TABLE_NAME]';
-$prevTable = '';
-$prevHeaders = '';
-$nextTable = '';
-$nextHeaders = '';
 const db_HOST = '[DB_HOST]';
 const db_NAME = '[DB_NAME]';
 const db_USER = '[DB_USER]';
@@ -14,8 +9,7 @@ const db_PASS = '[DB_PASS]';
 const header_list = '[HEADERS]';
 if (isset($_GET['key']) && $_GET['key'] == projectKey)
 {
-	$tableName = (isset($_GET['table']) && $_GET['table'] != '') ? $_GET['table'] : $tableName;
-	$headers = (isset($_GET['headers']) && $_GET['headers'] != '') ? explode(',',$_GET['headers']) : explode(',',header_list);
+	$headers = explode(',',header_list);
 	if (isset($_GET['toggle']))
 	{
 		$content = Toggle($headers, $_GET['toggle']);
@@ -23,10 +17,8 @@ if (isset($_GET['key']) && $_GET['key'] == projectKey)
 	}
 	else
 	{
-		$content = PullTable($headers);
-		$body = '<html>
-<head>
-<style>
+		$content = LoadTables();
+		$body = '<html><head><style>
 body { font-family: arial, sans-serif; }
 table { border-collapse: collapse; width: 100%; }
 td, th { border: 1px solid #dddddd; text-align: left; padding: 8px; }
@@ -42,29 +34,9 @@ function Toggle(element) { var x = new XMLHttpRequest(); x.onreadystatechange = 
 		var e = document.getElementById(element);
 		e.innerHTML = this.responseText;
 		e.className = (this.responseText.includes("✓"))? "" : "complete"; 
-		console.log(this.responseText);}} 
-	x.open("GET", "[NAME].php?key=[PROJECT_KEY]&toggle="+element+"&table='.$tableName.'"); x.send(); }
-function Open(table, headers) { window.location.href = "[NAME].php?key=[PROJECT_KEY]&table="+table+"&headers="+headers; }
-function Live() { window.location.href = "[NAME].php?key=[PROJECT_KEY]"; }
-</script>
-</head>
-<body>
-<h2>'.
-'<button onclick="'.(($prevTable != "")?'Open(\''.$prevTable.'\',\''.$prevHeaders.'\')">':'">').$prevTable.'</button>'.
-'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$tableName.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.
-'<button onclick="'.(($nextTable != "")?'Open(\''.$nextTable.'\',\''.$nextHeaders.'\')">':'">').$nextTable.'</button>'.
-'<br/><br/><button onclick="Live()"><b>Live Feedback</b><br/>('.$live.')</button>'.
-'</h2>
-<table>
-<tr><th class="button"></th>';
-		foreach ($headers as $header)
-		{
-			$body.='<th>'.$header.'</th>';
-		}
-		$body .='</tr>';
-		$body .= $content;
-		$body .='</table>
-</body></html>';
+		console.log(this.responseText);}}
+	x.open("GET", "[NAME].php?key=[PROJECT_KEY]&toggle="+element); x.send(); }
+</script></head><body>'.$content.'</body></html>';
 		die($body);
 	}
 }
@@ -132,84 +104,67 @@ function StoreSubmission($pText)
 	error_log('Store Submission Error: '.$mysqli->error,0);
 	return false;
 }
-function PullTable($cols)
+function LoadTables()
 {
-	global $tableName, $prevTable, $nextTable;
+	global $live, $headers;
 	$mysqli = new mysqli(db_HOST, db_USER, db_PASS, db_NAME);
 	if ($mysqli->connect_errno)
 	{
 		error_log('Connect Error: '.$mysqli->connect_error,0);
 		die('An error occured connecting to the database...');
 	}
-	LoadTables($mysqli);
-	$result = $mysqli->query('SELECT * FROM '.$tableName);
-	if ($result->num_rows == 0) return '';
-	$output = '';
-	while ($row = $result->fetch_assoc())
+	//	Get table names
+	$tables = array_column($mysqli->query('SHOW TABLES LIKE \'%'.(explode('_',$live)[0]).'%Review\'')->fetch_all(),0);
+	$count = count($tables);
+	//	Edit table names for sorting
+	for ($i = 0; $i < $count; $i ++)
 	{
-		$obj = json_decode($row['Submission']);
-		$complete = $row['Complete'];
-		$i = $row['id'];
-		$output .= '<tr id="'.$i.'"'.(($complete == 1)? ' class="complete"':' class=""').'><td><button onclick="Toggle('.$i.');">'.(($complete == 1)? 'X':'✓').'</td>';
-		foreach($cols as $header)
+		$vals = explode('_',$tables[$i]);
+		for ($v = 0; $v < count($vals); $v ++) $vals[$v] = preg_match('/^\d+$/', $vals[$v]) ? sprintf('%08d',$vals[$v]) : $vals[$v];
+		$tables[$i] = join($vals,'_');
+	}
+	rsort($tables);
+	//	Reset table names
+	for ($i = 0; $i < $count; $i ++)
+	{
+		$vals = explode('_',$tables[$i]);
+		for ($v = 0; $v < count($vals); $v ++) $vals[$v] = preg_match('/^\d+$/', $vals[$v]) ? sprintf('%01d',$vals[$v]) : $vals[$v];
+		$tables[$i] = join($vals,'_');
+	}
+	//	Load contents
+	$output = '';
+	for ($t = 0; $t < $count; $t ++)
+	{
+		$result = $mysqli->query('SELECT * FROM '.$tables[$t]);
+		if ($result->num_rows == 0) return '';
+		$output .= '<h2>'.$tables[$t].'</h2><table><tr><th class="button"></th>';
+		foreach ($headers as $header) { $output.='<th>'.$header.'</th>'; }
+		$output .='</tr>';
+		while ($row = $result->fetch_assoc())
 		{
-			$output .= '<td>'.((isset($obj -> $header))? $obj -> $header:'').'</td>';
+			$obj = json_decode($row['Submission']);
+			$complete = $row['Complete'];
+			$id = $tables[$t].'|'.$row['id'];
+			$output .= '<tr id="'.$id.'"'.(($complete == 1)? ' class="complete"':' class=""').'><td><button onclick="Toggle(\''.$id.'\');">'.(($complete == 1)? 'X':'✓').'</td>';
+			foreach($headers as $header){$output .= '<td>'.((isset($obj -> $header))? $obj -> $header:'').'</td>';}
+			$output .= '</tr>';
 		}
-		$output .= '</tr>';
+		$output .= '</table><br/><br/>';
 	}
 	$mysqli->close();
 	return $output;
 }
-function LoadTables($sql)
+function Toggle($index)
 {
-	global $tableName, $prevTable, $nextTable, $prevHeaders, $nextHeaders, $live;
-	$tables = array_column($sql->query('SHOW TABLES LIKE \'%'.(explode('_',$live)[0]).'%Review\'')->fetch_all(),0);
-	$count = count($tables);
-	for ($i = 0; $i < $count; $i ++)
-	{
-		$vals = explode('_',$tables[$i]);
-		for ($v = 0; $v < count($vals); $v ++) $vals[$v] = intval($vals[$v]) > 0 ? sprintf('%08d',$vals[$v]) : $vals[$v];
-		$tables[$i] = join($vals,'_');
-	}
-	sort($tables);
-	for ($i = 0; $i < $count; $i ++)
-	{
-		$vals = explode('_',$tables[$i]);
-		for ($v = 0; $v < count($vals); $v ++) $vals[$v] = intval($vals[$v]) > 0 ? sprintf('%01d',$vals[$v]) : $vals[$v];
-		$tables[$i] = join($vals,'_');
-	}
-	$curTable = '';
-	for ($i = 0; $i < $count; $i++)
-	{
-		$sel = $tables[$i];
-		if ($curTable == '' && $tableName != $sel) 
-		{
-			$prevTable = $sel;
-			SetHeaders($sql, $prevTable, $prevHeaders);
-		}
-		else if ($tableName == $sel) $curTable = $sel;
-		else if ($curTable != '' && $tableName != $sel && $nextTable == '') 
-		{
-			$nextTable = $sel;
-			SetHeaders($sql, $nextTable, $nextHeaders);
-			return;
-		}
-	}
-}
-function SetHeaders($sql, $table, &$headers)
-{
-	$result = $sql->query('SELECT * FROM '.$table.' LIMIT 1');
-	while ($row = $result->fetch_assoc()) { $headers = array_keys($row[0]); return;}
-}
-function Toggle($cols, $i)
-{
-	global $tableName;
+	global $headers;
 	$mysqli = new mysqli(db_HOST, db_USER, db_PASS, db_NAME);
 	if ($mysqli->connect_errno)
 	{
 		error_log('Connect Error: '.$mysqli->connect_error,0);
 		die('An error occured connecting to the database...');
 	}
+	$tableName = explode('|', $index)[0];
+	$i = explode('|', $index)[1];
 	$result = $mysqli->query('SELECT * FROM '.$tableName.' WHERE id='.($i));
 	if ($result->num_rows == 0) return 'Unable to find id.';
 	$row = $result->fetch_assoc();
@@ -220,21 +175,13 @@ function Toggle($cols, $i)
 	$output = '<td>'.(($row['Complete'])?'true':'false').' cpl = '.(($cpl)?'true':'false').'</td><td>'.$sub.'</td><td>'.($i).'</td>';
 	if ($mysqli->query('UPDATE '.$tableName.' SET Complete='.(($cpl)?'1':'0').' WHERE id='.($i)))
 	{
-		$output = '<td><button onclick="Toggle('.$i.');">'.(($cpl)? 'X':'✓').'</td>';
-		foreach($cols as $header)
+		$output = '<td><button onclick="Toggle(\''.$index.'\');">'.(($cpl)? 'X':'✓').'</td>';
+		foreach($headers as $header)
 		{
 			$output .= '<td>'.((isset($object -> $header))? $object -> $header:'').'</td>';
 		}
 	}
 	$mysqli->close();
 	return $output;
-}
-function PullValue($pKey)
-{
-	global $mysqli, $tableName;
-	$result = $mysqli->query('SELECT * FROM '.$tableName.' WHERE saveKey=\''.$pKey.'\'');
-	if ($result->num_rows == 0) return false;
-	$row = $result->fetch_assoc();
-	Success('loadedVal',$row['saveVal']);
 }
 ?>
