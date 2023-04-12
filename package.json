@@ -1,6 +1,6 @@
 {
   "name": "com.codysource.reviewtool",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "displayName": "Review Tool",
   "description": "This package allows for quick project feedback submission to a php mysql database.",
   "unity": "2020.3",

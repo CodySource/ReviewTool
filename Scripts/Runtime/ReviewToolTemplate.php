@@ -89,15 +89,15 @@ function ConnectToDB()
 }
 function VerifyTables()
 {
-	global $mysqli, $timestamp, $tableName;
-	if ($mysqli->query('CREATE TABLE IF NOT EXISTS '.$tableName.' (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, Complete BOOLEAN, Submission VARCHAR(1023));')) return true;
+	global $mysqli, $timestamp, $live;
+	if ($mysqli->query('CREATE TABLE IF NOT EXISTS '.$live.' (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, Complete BOOLEAN, Submission VARCHAR(1023));')) return true;
 	error_log('Verify Tables Error: '.$mysqli->error,0);
 	return false;
 }
 function StoreSubmission($pText)
 {
-	global $mysqli, $timestamp, $tableName;
-	$q = $mysqli->prepare('INSERT INTO '.$tableName.' (Complete, Submission) VALUES(0, ?)');
+	global $mysqli, $timestamp, $live;
+	$q = $mysqli->prepare('INSERT INTO '.$live.' (Complete, Submission) VALUES(0, ?)');
 	$json = $pText;
 	$q->bind_param('s', $json);
 	if ($q->execute()) return true;
